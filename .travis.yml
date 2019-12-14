@@ -1,0 +1,25 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  -docker build -t dvolkov77/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run dvolkov77/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t dvolkov77/multi-client ./client
+  - docker build -t dvolkov77/multi-nginx ./nginx
+  - docker build -t dvolkov77/mutlti-server ./server
+  - docker build -t dvolkov77/mutli-worker ./worker
+
+  #Log in to the docker CLI
+  # env variables added to travis ci
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+
+  #Take images and push it to docker hub
+  - docker push dvolkov77/multi-client
+  - docker push dvolkov77/multi-nginx
+  - docker push dvolkov77/multi-server
+  - docker push dvolkov77/multi-worker
